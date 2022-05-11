@@ -1,2 +1,30 @@
-# auth-login
-Иasic user authorization from the configuration
+# Symbiotic Base Session auth
+### Описание
+
+Пакет поставляет простую авторизацию пользователей, пользователи добавляются в основной конфигурации фреймворка.
+Если вы используете фреймворс совместно с другим, то рекомендуется сделать адаптер и авторизовать через сессионные переменные.
+
+Согласно идеологии фреймворка все пользователи делятся на три типа:
+- Пользователь сайта (неавторизованный, не имеет никаких прав)
+- Менеджер (имеет доступ в админку и может использовать все приложения, кроме админских)
+- Админ (полный доступ в админке)
+
+Пример создания пользователей и их настроек:
+```php
+
+// В основной массив конфигурации добавляется секция
+$config['auth'] =  [
+    'users' =>[
+        [
+            'login' => 'admin_login',
+            /** @see \Symbiotic\Auth\UserInterface::GROUP_ADMIN  and other groups **/
+            'access_group' => 365, //admin
+            // Password in https://www.php.net/manual/ru/function.password-hash.php
+            // algo - PASSWORD_BCRYPT
+            'password' => '$2y$10$fblGNBFYBjC9a3L6d0.lle1BoVFdMlMOzN6/NWjqBb8wFlJZt9P8C'//
+        ]
+    ],
+    'base_login' => true, // включение и отключение авторизации по логину
+];
+
+```
