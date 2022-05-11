@@ -1,0 +1,26 @@
+{
+  "name": "symbiotic/auth-login",
+  "require": {
+    "php": ">=7.2",
+    "symbiotic/ui_http_kernel": "1.*"
+  },
+  "license": "MIT",
+  "version": "1.0.0",
+  "autoload": {
+    "psr-4": {
+      "\\Symbiotic\\Apps\\AuthLogin\\": "src/Apps/AuthLogin"
+    }
+  },
+  "extra": {
+    "symbiotic": {
+      "id": "auth_login",
+      "app": {
+        "id": "auth_login",
+        "name": "Basic Framework Login Auth",
+        "routing": "\\Symbiotic\\Apps\\AuthLogin\\Routing",
+        "controllers_namespace": "\\Symbiotic\\Apps\\AuthLogin\\Http\\Controllers",
+        "version": "1.0.1"
+      }
+    }
+  }
+}
