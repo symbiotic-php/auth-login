@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Symbiotic\Apps\AuthLogin;
 
 use Symbiotic\Auth\Authenticator\AbstractAuthenticator;
@@ -10,41 +12,22 @@ use Symbiotic\Auth\ResultInterface;
 class LoginAuthenticator extends AbstractAuthenticator
 {
 
-    const CONFIG_USERS_KEY = 'auth.users';
-
     /**
-     * @uses $core['config']['auth'][users'] in core config {@see \Symbiotic\Core\Core}
-     * @var array |array[] = [['login' => 'test1','password' => '$2$s32d23dd2332f3f54de32d','access_group' => 69],//....]
-     */
-    protected $users = [];
-
-    /**
-     * @var string email or string login
-     */
-    protected $login = '';
-
-    /**
-     * https://www.php.net/manual/ru/function.password-hash.php
+     * @param array  $users    From core config  $core['config']['auth'][users']
+     *                         [
+     *                         ['login' => 'test1','password' => '$2$s32....','access_group' => 69],
+     *                         /// .....
+     *                         ]
+     *
+     * @param string $login    Email or string login
+     *
+     * @param string $password encrypted string CRYPT_BLOWFISH
+     *
+     * @see  https://www.php.net/manual/ru/function.password-hash.php
      * @info Please use CRYPT_BLOWFISH and length > 7
-     * @var string
      */
-    protected $password = '';
-
-
-    /**
-     *
-     * @param array $users нет смысла строить репозиторий,поэтому примем массив
-     * по умолчанию будет всего три пользователя в конфиге
-     *
-     * @param string $login email or string login
-     * @param string $password raw password
-     */
-    public function __construct(array $users, string $login, string $password)
+    public function __construct(protected array $users, protected string $login, protected string $password)
     {
-        $this->users = $users;
-        $this->login = $login;
-        $this->password = $password;
-
     }
 
     /**
@@ -53,7 +36,7 @@ class LoginAuthenticator extends AbstractAuthenticator
      * @return ResultInterface
      * @throws \Exception If authentication cannot be performed
      */
-    public function authenticate():ResultInterface
+    public function authenticate(): ResultInterface
     {
         foreach ($this->users as $user) {
             if ($user['login'] === $this->login) {

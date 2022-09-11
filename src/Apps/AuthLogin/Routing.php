@@ -1,8 +1,8 @@
 <?php
 
+declare(strict_types=1);
 
 namespace Symbiotic\Apps\AuthLogin;
-
 
 use Symbiotic\Routing\AppRouting;
 use Symbiotic\Routing\RouterInterface;
@@ -10,11 +10,9 @@ use Symbiotic\Routing\RouterInterface;
 
 class Routing extends AppRouting
 {
-    public function frontendRoutes(RouterInterface $router)
+    public function frontendRoutes(RouterInterface $router): void
     {
-
         $router->group(['namespace' => 'Frontend'], function (RouterInterface $router) {
-
             // todo: csrf link hash
             $router->get('/logout', [
                 'uses' => 'Auth@logout',

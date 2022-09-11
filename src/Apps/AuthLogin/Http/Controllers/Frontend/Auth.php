@@ -1,88 +1,98 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Symbiotic\Apps\AuthLogin\Http\Controllers\Frontend;
 
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Symbiotic\Apps\AuthLogin\LoginAuthenticator;
 use Symbiotic\Auth\AuthServiceInterface;
 use Symbiotic\Core\CoreInterface;
-use Symbiotic\Core\View\View;
+use Symbiotic\View\View;
+use Symbiotic\View\ViewFactory;
+use Symbiotic\Routing\UrlGeneratorInterface;
+
 use function _S\redirect;
-use function _S\route;
+
 
 class Auth
 {
     /**
-     * @var AuthServiceInterface
+     * @param AuthServiceInterface  $auth
+     * @param ViewFactory           $view
+     * @param UrlGeneratorInterface $urlGenerator
      */
-    protected $auth;
-
-    /**
-     * Auth constructor.
-     * @param AuthServiceInterface $auth
-     */
-    public function __construct(AuthServiceInterface $auth)
-    {
-        $this->auth = $auth;
+    public function __construct(
+        protected AuthServiceInterface $auth,
+        protected ViewFactory $view,
+        protected UrlGeneratorInterface $urlGenerator
+    ) {
     }
 
     /**
      * @param CoreInterface $core
+     *
      * @return View
-     * @throws \Psr\Container\ContainerExceptionInterface
-     * @throws \Psr\Container\NotFoundExceptionInterface
+     * @throws \Symbiotic\Packages\ResourceExceptionInterface
      */
-    public function login(CoreInterface $core)
+    public function login(CoreInterface $core): View
     {
-        return View::make($this->getFormTheme($core) . '::auth/login_form');
+        return $this->view->make($this->getFormTheme($core) . '::auth/login_form');
     }
 
     /**
      * @param CoreInterface $core
-     * @return mixed
+     *
+     * @return string
      */
-    protected function getFormTheme(CoreInterface $core)
+    protected function getFormTheme(CoreInterface $core): string
     {
         return $core('config::auth.login_form_theme', 'auth_login');
     }
 
     /**
      * @param ServerRequestInterface $request
-     * @param CoreInterface $core
-     * @return \Psr\Http\Message\ResponseInterface|View
-     * @throws \Psr\Container\ContainerExceptionInterface
-     * @throws \Psr\Container\NotFoundExceptionInterface
+     * @param CoreInterface          $core
+     *
+     * @return View|ResponseInterface
+     * @throws \Symbiotic\Packages\ResourceExceptionInterface
+     * @throws \Symbiotic\Routing\RouteNotFoundException
      */
-    public function auth(ServerRequestInterface $request, CoreInterface $core)
+    public function auth(ServerRequestInterface $request, CoreInterface $core): View|ResponseInterface
     {
         $errors = [];
         $data = $request->getParsedBody();
         if (!empty($data['login']) && !empty($data['password'])) {
-
             $auth = $this->auth;
-            if ($auth) {
-                $result = $auth->authenticate(new LoginAuthenticator($core('config::auth.users', []), $data['login'], $data['password']));
-                if ($result->isValid()) {
-                    return redirect(route('backend:develop::index'));
-                } else {
-                    $errors['form'] = 'Invalid login or password!';
-                }
+
+            $result = $auth->authenticate(
+                new LoginAuthenticator($core('config::auth.users', []), $data['login'], $data['password'])
+            );
+            if ($result->isValid()) {
+                return redirect($core, $this->urlGenerator->adminRoute('develop::index'), 302);
             } else {
-                $errors['form'] = 'The authorization service is disabled!';
+                $errors['form'] = 'Invalid login or password!';
             }
         } else {
             $errors['form'] = 'Empty login or password!';
-
         }
-        return View::make($this->getFormTheme($core) . '::auth/login_form', ['errors' => $errors]);
+        return $this->view->make($this->getFormTheme($core) . '::auth/login_form', ['errors' => $errors]);
     }
 
-    public function logout(AuthServiceInterface $auth = null)
+    /**
+     * @param CoreInterface             $core
+     * @param AuthServiceInterface|null $auth
+     *
+     * @return ResponseInterface
+     * @throws \Symbiotic\Routing\RouteNotFoundException
+     */
+    public function logout(CoreInterface $core, AuthServiceInterface $auth = null): ResponseInterface
     {
         if (!$auth) {
             throw new \Exception('The authorization service is disabled!');
         }
         $auth->clearIdentity();
-        return redirect(route('auth_login::auth.login'));
+        return redirect($core, $this->urlGenerator->route('auth_login::auth.login'));
     }
 }
